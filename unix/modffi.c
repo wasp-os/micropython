@@ -267,7 +267,10 @@ STATIC mp_obj_t ffimod_var(mp_obj_t self_in, mp_obj_t vartype_in, mp_obj_t symna
 MP_DEFINE_CONST_FUN_OBJ_3(ffimod_var_obj, ffimod_var);
 
 STATIC mp_obj_t ffimod_make_new(mp_obj_t type_in, mp_uint_t n_args, mp_uint_t n_kw, const mp_obj_t *args) {
-    const char *fname = mp_obj_str_get_str(args[0]);
+    const char *fname = NULL;
+    if (args[0] != mp_const_none) {
+        fname = mp_obj_str_get_str(args[0]);
+    }
     void *mod = dlopen(fname, RTLD_NOW | RTLD_LOCAL);
 
     if (mod == NULL) {
