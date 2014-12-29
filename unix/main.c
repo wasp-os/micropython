@@ -337,6 +337,11 @@ int main(int argc, char **argv) {
 
     mp_init();
 
+#if HOT_TRACES
+    extern mp_obj_dict_t hotspot_map;
+    mp_obj_dict_init(&hotspot_map, 0);
+#endif
+
     #ifndef _WIN32
     // create keyboard interrupt object
     keyboard_interrupt_obj = mp_obj_new_exception(&mp_type_KeyboardInterrupt);
@@ -488,6 +493,10 @@ int main(int argc, char **argv) {
     if (mp_verbose_flag) {
         extern mp_obj_t mp_micropython_mem_info(mp_uint_t n_args, const mp_obj_t *args);
         mp_micropython_mem_info(0, NULL);
+#if HOT_TRACES
+        mp_obj_print(&hotspot_map, PRINT_REPR);
+        printf("\n");
+#endif
     }
 
     mp_deinit();

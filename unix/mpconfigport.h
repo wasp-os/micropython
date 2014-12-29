@@ -158,3 +158,6 @@ extern const struct _mp_obj_fun_builtin_t mp_builtin_open_obj;
 #else
 #include <alloca.h>
 #endif
+
+
+#define HOT_TRACES (0)

@@ -46,6 +46,41 @@
 #define TRACE(ip)
 #endif
 
+#if HOT_TRACES
+mp_obj_dict_t hotspot_map;
+const void *trace_ip;
+int trace_len;
+
+static bool record_hotspot(const byte *ip) {
+    mp_map_elem_t *elem = mp_map_lookup(&hotspot_map.map, MP_OBJ_NEW_SMALL_INT(ip), MP_MAP_LOOKUP_ADD_IF_NOT_FOUND);
+    //printf("hotspot %lu: %p\n", (mp_uint_t)ip, elem);
+    if (elem->value == mp_const_true || elem->value == mp_const_false) {
+        return false;
+    }
+    mp_uint_t count = 0;
+    if (MP_LIKELY(elem->value != MP_OBJ_NULL)) {
+        count = MP_OBJ_SMALL_INT_VALUE(elem->value);
+    }
+    count++;
+    if (count < 30) {
+        elem->value = MP_OBJ_NEW_SMALL_INT(count);
+        return false;
+    }
+    trace_ip = ip;
+    trace_len = 0;
+    extern const byte *mp_showbc_code_start;
+    mp_showbc_code_start = 0;
+    printf("--- hotpath begin " UINT_FMT " ---\n[\n", (mp_uint_t)ip);
+    elem = mp_map_lookup(&hotspot_map.map, MP_OBJ_NEW_SMALL_INT(ip), MP_MAP_LOOKUP);
+    elem->value = mp_const_true;
+    return true;
+}
+
+#define RECORD_HOTSPOT(ip) if (record_hotspot(ip)) \
+    { disp_table = trace_table; goto *trace_table[*ip++]; }
+
+#endif
+
 // Value stack grows up (this makes it incompatible with native C stack, but
 // makes sure that arguments to functions are in natural order arg1..argN
 // (Python semantics mandates left-to-right evaluation order, including for
@@ -67,6 +102,7 @@ typedef enum {
         unum = (unum << 7) + (*ip & 0x7f); \
     } while ((*ip++ & 0x80) != 0)
 #define DECODE_ULABEL mp_uint_t ulab = (ip[0] | (ip[1] << 8)); ip += 2
+#define PEEK_SLABEL mp_uint_t slab = (ip[0] | (ip[1] << 8)) - 0x8000
 #define DECODE_SLABEL mp_uint_t slab = (ip[0] | (ip[1] << 8)) - 0x8000; ip += 2
 #define DECODE_QSTR qstr qst = 0; \
     do { \
@@ -94,6 +130,17 @@ typedef enum {
     currently_in_except_block = MP_TAGPTR_TAG0(exc_sp->val_sp); /* restore previous state */ \
     exc_sp--; /* pop back to previous exception handler */
 
+#define dump_stk_cell(idx) \
+                    printf("('%s', \"", mp_obj_get_type_str(sp[idx])); \
+                    mp_obj_print(sp[idx], PRINT_REPR); \
+                    printf("\"), ");
+
+#define dump_tos() \
+                    printf("{'sp': " UINT_FMT ", 'tos': [", sp - code_state->sp); \
+                    dump_stk_cell(0); \
+                    dump_stk_cell(-1); \
+                    printf("]}");
+
 // fastn has items in reverse order (fastn[0] is local[0], fastn[-1] is local[1], etc)
 // sp points to bottom of stack which grows up
 // returns:
@@ -111,10 +158,15 @@ mp_vm_return_kind_t mp_execute_bytecode(mp_code_state *code_state, volatile mp_o
 #endif
 #if MICROPY_OPT_COMPUTED_GOTO
     #include "vmentrytable.h"
+    #if HOT_TRACES
+    static void **disp_table = hotspot_table;
+    #else
+    static void **disp_table = entry_table;
+    #endif
     #define DISPATCH() do { \
         TRACE(ip); \
         MARK_EXC_IP_GLOBAL(); \
-        goto *entry_table[*ip++]; \
+        goto *disp_table[*ip++]; \
     } while(0)
     #define DISPATCH_WITH_PEND_EXC_CHECK() goto pending_exception_check
     #define ENTRY(op) entry_##op
@@ -171,6 +223,57 @@ dispatch_loop:
                 TRACE(ip);
                 MARK_EXC_IP_GLOBAL();
                 switch (*ip++) {
+#endif
+
+#if MICROPY_OPT_COMPUTED_GOTO && HOT_TRACES
+                ENTRY(record_trace): {
+                    byte bc = ip[-1];
+                    if (++trace_len > 200) {
+                        mp_map_elem_t *elem = mp_map_lookup(&hotspot_map.map, MP_OBJ_NEW_SMALL_INT(trace_ip), MP_MAP_LOOKUP);
+                        elem->value = mp_const_false;
+                        disp_table = entry_table;
+                        //trace_ip = NULL;
+                        printf("--- trace aborted ---\n");
+                        goto *entry_table[bc];
+                    }
+
+                    printf("[" UINT_FMT ", '", (mp_uint_t)(ip - 1));
+                    mp_bytecode_print_str(ip - 1);
+
+                    bool finished = false;
+                    if (bc >= MP_BC_JUMP && bc <= MP_BC_JUMP_IF_FALSE_OR_POP) {
+                        const byte *save_ip = ip;
+                        DECODE_SLABEL;
+                        if (ip + slab == trace_ip) {
+                            disp_table = entry_table;
+                            //trace_ip = NULL;
+                            finished = true;
+                        } else {
+                            //printf("# Found jump, but not to loop header\n");
+                            if (bc >= MP_BC_POP_JUMP_IF_TRUE && bc <= MP_BC_JUMP_IF_FALSE_OR_POP) {
+                                //printf("[0, 'GUARD_COND value: ");
+                                printf(" ");
+                                mp_obj_print(TOP(), PRINT_REPR);
+                                bool taken = mp_obj_is_true(TOP()) ^ (bc & 1);
+                                printf(" taken:%d", taken);
+                                printf(" " UINT_FMT, (mp_uint_t)(taken ? ip : ip + slab));
+                                //printf(", {}],\n");
+                            }
+                        }
+                        ip = save_ip;
+                    }
+
+                    printf("',\t");
+                    dump_tos();
+                    printf("],");
+                    printf("\n");
+
+                    if (finished) {
+                        printf("]\n--- hotpath end ---\n");
+                    }
+
+                    goto *entry_table[bc];
+                }
 #endif
 
                 ENTRY(MP_BC_LOAD_CONST_FALSE):
@@ -398,12 +501,35 @@ dispatch_loop:
                     DISPATCH();
                 }
 
+#if HOT_TRACES
+                ENTRY(MP_BC_JUMP_hotspot): {
+                    DECODE_SLABEL;
+                    ip += slab;
+                    if ((mp_int_t)slab < 0) {
+                        RECORD_HOTSPOT(ip);
+                    }
+                    DISPATCH_WITH_PEND_EXC_CHECK();
+                }
+#endif
+
                 ENTRY(MP_BC_JUMP): {
                     DECODE_SLABEL;
                     ip += slab;
                     DISPATCH_WITH_PEND_EXC_CHECK();
                 }
 
+#if HOT_TRACES
+                ENTRY(MP_BC_POP_JUMP_IF_TRUE_hotspot): {
+                    DECODE_SLABEL;
+                    if (mp_obj_is_true(POP())) {
+                        ip += slab;
+                        if ((mp_int_t)slab < 0) {
+                            RECORD_HOTSPOT(ip);
+                        }
+                    }
+                    DISPATCH_WITH_PEND_EXC_CHECK();
+                }
+#endif
                 ENTRY(MP_BC_POP_JUMP_IF_TRUE): {
                     DECODE_SLABEL;
                     if (mp_obj_is_true(POP())) {
@@ -411,6 +537,19 @@ dispatch_loop:
                     }
                     DISPATCH_WITH_PEND_EXC_CHECK();
                 }
+
+#if HOT_TRACES
+                ENTRY(MP_BC_POP_JUMP_IF_FALSE_hotspot): {
+                    DECODE_SLABEL;
+                    if (!mp_obj_is_true(POP())) {
+                        ip += slab;
+                        if ((mp_int_t)slab < 0) {
+                            RECORD_HOTSPOT(ip);
+                        }
+                    }
+                    DISPATCH_WITH_PEND_EXC_CHECK();
+                }
+#endif
 
                 ENTRY(MP_BC_POP_JUMP_IF_FALSE): {
                     DECODE_SLABEL;
