@@ -70,9 +70,15 @@ $(Z_DOTCONFIG):
 	$(MAKE) -f Makefile.zephyr BOARD=$(BOARD) initconfig
 
 GENERIC_TARGETS = all zephyr qemu qemugdb flash debug
-KCONFIG_TARGETS = config nconfig menuconfig xconfig gconfig
+KCONFIG_TARGETS = \
+	initconfig config nconfig menuconfig xconfig gconfig \
+	oldconfig silentoldconfig defconfig savedefconfig \
+	allnoconfig allyesconfig alldefconfig randconfig \
+	listnewconfig olddefconfig
 
-$(GENERIC_TARGETS) $(KCONFIG_TARGETS): $(LIBMICROPYTHON)
+$(GENERIC_TARGETS) : $(LIBMICROPYTHON)
+
+$(GENERIC_TARGETS) $(KCONFIG_TARGETS):
 	$(MAKE) -f Makefile.zephyr BOARD=$(BOARD) $@
 
 # Note: doesn't rebuild binary, just runs qemu against it
