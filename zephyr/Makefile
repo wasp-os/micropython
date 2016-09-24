@@ -80,10 +80,12 @@ KCONFIG_TARGETS = \
 	oldconfig silentoldconfig defconfig savedefconfig \
 	allnoconfig allyesconfig alldefconfig randconfig \
 	listnewconfig olddefconfig
+CLEAN_TARGETS = pristine mrproper
 
 $(GENERIC_TARGETS) : $(LIBMICROPYTHON)
+$(CLEAN_TARGETS) :  clean
 
-$(GENERIC_TARGETS) $(KCONFIG_TARGETS):
+$(GENERIC_TARGETS) $(KCONFIG_TARGETS) $(CLEAN_TARGETS):
 	$(MAKE) -f Makefile.zephyr BOARD=$(BOARD) $@
 
 # Note: doesn't rebuild binary, just runs qemu against it
@@ -111,5 +113,10 @@ z_config_proxy.mk:
 	$(MAKE) -f Makefile.zephyr BOARD=$(BOARD) initconfig
 	echo "include z_config.mk" >$@
 
+CLEAN_EXTRA = z_config_proxy.mk
+
 # Clean Zephyr things too
-CLEAN_EXTRA = outdir z_config_proxy.mk
+clean : z_clean
+
+z_clean :
+	$(MAKE) -f Makefile.zephyr BOARD=$(BOARD) clean
