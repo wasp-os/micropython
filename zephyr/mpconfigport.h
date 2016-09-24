@@ -60,6 +60,10 @@ typedef long mp_off_t;
 #define MICROPY_PORT_ROOT_POINTERS \
     const char *readline_hist[8];
 
+// extra built in names to add to the global namespace
+#define MICROPY_PORT_BUILTINS \
+    { MP_OBJ_NEW_QSTR(MP_QSTR_help), (mp_obj_t)&mp_builtin_help_obj }, \
+
 extern const struct _mp_obj_module_t mp_module_socket;
 
 #if MICROPY_PY_SOCKET
