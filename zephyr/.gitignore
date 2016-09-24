@@ -1,0 +1,3 @@
+outdir/
+qemu.pid
+z_config_proxy.mk
