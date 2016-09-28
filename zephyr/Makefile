@@ -17,10 +17,11 @@ OUTDIR_PREFIX = $(BOARD)
 
 # Zephyr (generated) config files - must be defined before include below
 Z_DOTCONFIG = outdir/$(OUTDIR_PREFIX)/.config
-Z_AUTOCONF_H = outdir/$(OUTDIR_PREFIX)/include/generated/autoconf.h
+Z_SYSGEN_H = outdir/$(OUTDIR_PREFIX)/misc/generated/sysgen/sysgen.h
+Z_EXPORTS = outdir/$(OUTDIR_PREFIX)/Makefile.export
 DQUOTE = "
 # "
-include z_config_proxy.mk
+include $(Z_EXPORTS)
 
 ifdef CONFIG_MBEDTLS
 MICROPY_PY_USSL = 1
@@ -30,22 +31,15 @@ endif
 
 FROZEN_DIR = scripts
 
-# Zephyr toolchain config is 2-pass, so included twice
-include $(ZEPHYR_BASE)/scripts/Makefile.toolchain.$(ZEPHYR_GCC_VARIANT)
-include $(ZEPHYR_BASE)/scripts/Makefile.toolchain.$(ZEPHYR_GCC_VARIANT)
-
-CFLAGS_TARGET = $(cflags-y)
-
 include ../py/mkenv.mk
 include ../py/py.mk
 
 INC += -I.
 INC += -I..
 INC += -I$(BUILD)
-INC += -I$(ZEPHYR_BASE)/include -I$(ZEPHYR_BASE) \
-    -I$(ZEPHYR_BASE)/net/ip -I$(ZEPHYR_BASE)/net/ip/contiki -I$(ZEPHYR_BASE)/net/ip/contiki/os \
-    -Ioutdir/$(OUTDIR_PREFIX)/misc/generated/sysgen \
-    -I$(dir $(Z_AUTOCONF_H))
+INC += -I$(ZEPHYR_BASE)/net/ip
+INC += -I$(ZEPHYR_BASE)/net/ip/contiki
+INC += -I$(ZEPHYR_BASE)/net/ip/contiki/os
 
 ifdef CONFIG_NETWORKING
 SRC_MOD += modsocket.c
@@ -73,13 +67,13 @@ SRC_QSTR += $(SRC_C)
 OBJ = $(PY_O) $(addprefix $(BUILD)/, $(SRC_C:.c=.o))
 OBJ += $(addprefix $(BUILD)/, $(LIB_SRC_C:.c=.o))
 
-COPT = -Os -DNDEBUG -fdata-sections -ffunction-sections
-CFLAGS = -std=gnu99 $(TOOLCHAIN_CFLAGS) $(INC) $(CFLAGS_MOD) $(COPT) $(CFLAGS_TARGET)
+CFLAGS = $(KBUILD_CFLAGS) $(NOSTDINC_FLAGS) $(ZEPHYRINCLUDE) \
+	 -std=gnu99 -DNDEBUG $(INC)
 
 include ../py/mkrules.mk
 
-$(Z_DOTCONFIG):
-	$(MAKE) -f Makefile.zephyr BOARD=$(BOARD) initconfig
+$(Z_EXPORTS):
+	$(MAKE) -f Makefile.zephyr BOARD=$(BOARD) initconfig outputexports
 
 GENERIC_TARGETS = all zephyr qemu qemugdb flash debug
 KCONFIG_TARGETS = \
@@ -106,19 +100,12 @@ qemu-net:
 # For GDB debugging with QEMU
 #-s -S
 
-$(LIBMICROPYTHON): $(Z_AUTOCONF_H)
-build/genhdr/qstr.i.last: $(Z_AUTOCONF_H)
+$(LIBMICROPYTHON): $(Z_SYSGEN_H)
+build/genhdr/qstr.i.last: $(Z_SYSGEN_H)
 
-$(Z_AUTOCONF_H):
+$(Z_SYSGEN_H):
 	rm -f $(LIBMICROPYTHON)
 	-$(MAKE) -f Makefile.zephyr BOARD=$(BOARD)
-
-zephyr_arch.mk: $(Z_DOTCONFIG)
-	echo "include $(ZEPHYR_BASE)/arch/$(ARCH)/Makefile" >$@
-
-z_config_proxy.mk:
-	$(MAKE) -f Makefile.zephyr BOARD=$(BOARD) initconfig
-	echo "include z_config.mk" >$@
 
 CLEAN_EXTRA = z_config_proxy.mk
 
