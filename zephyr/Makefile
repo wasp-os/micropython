@@ -87,6 +87,7 @@ $(GENERIC_TARGETS) : $(LIBMICROPYTHON)
 $(CLEAN_TARGETS) :  clean
 
 $(GENERIC_TARGETS) $(KCONFIG_TARGETS) $(CLEAN_TARGETS):
+	$(RM) -f outdir/$(OUTDIR_PREFIX)/zephyr.lnk
 	$(MAKE) -f Makefile.zephyr BOARD=$(BOARD) $@
 
 # Note: doesn't rebuild binary, just runs qemu against it
