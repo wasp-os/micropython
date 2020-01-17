@@ -145,6 +145,24 @@ STATIC mp_obj_t machine_reset(void) {
 }
 MP_DEFINE_CONST_FUN_OBJ_0(machine_reset_obj, machine_reset);
 
+#if MICROPY_PY_MACHINE_DFU_BOOTLOADER
+STATIC mp_obj_t machine_enter_ota_dfu(void) {
+    const int DFU_MAGIC_OTA_RESET = 0xa8;
+    NRF_POWER->GPREGRET = DFU_MAGIC_OTA_RESET;
+    NVIC_SystemReset();
+    return mp_const_none;
+}
+MP_DEFINE_CONST_FUN_OBJ_0(machine_enter_ota_dfu_obj, machine_enter_ota_dfu);
+
+STATIC mp_obj_t machine_enter_serial_dfu(void) {
+    const int DFU_MAGIC_SERIAL_ONLY_RESET = 0x4e;
+    NRF_POWER->GPREGRET = DFU_MAGIC_SERIAL_ONLY_RESET;
+    NVIC_SystemReset();
+    return mp_const_none;
+}
+MP_DEFINE_CONST_FUN_OBJ_0(machine_enter_serial_dfu_obj, machine_enter_serial_dfu);
+#endif
+
 STATIC mp_obj_t machine_soft_reset(void) {
     pyexec_system_exit = PYEXEC_FORCED_EXIT;
     nlr_raise(mp_obj_new_exception(&mp_type_SystemExit));
@@ -193,6 +211,10 @@ STATIC const mp_rom_map_elem_t machine_module_globals_table[] = {
     { MP_ROM_QSTR(MP_QSTR___name__),           MP_ROM_QSTR(MP_QSTR_umachine) },
     { MP_ROM_QSTR(MP_QSTR_info),               MP_ROM_PTR(&machine_info_obj) },
     { MP_ROM_QSTR(MP_QSTR_reset),              MP_ROM_PTR(&machine_reset_obj) },
+#if MICROPY_PY_MACHINE_DFU_BOOTLOADER
+    { MP_ROM_QSTR(MP_QSTR_enter_ota_dfu),      MP_ROM_PTR(&machine_enter_ota_dfu_obj) },
+    { MP_ROM_QSTR(MP_QSTR_enter_serial_dfu),   MP_ROM_PTR(&machine_enter_serial_dfu_obj) },
+#endif
     { MP_ROM_QSTR(MP_QSTR_soft_reset),         MP_ROM_PTR(&machine_soft_reset_obj) },
     { MP_ROM_QSTR(MP_QSTR_enable_irq),         MP_ROM_PTR(&machine_enable_irq_obj) },
     { MP_ROM_QSTR(MP_QSTR_disable_irq),        MP_ROM_PTR(&machine_disable_irq_obj) },
