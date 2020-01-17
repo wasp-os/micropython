@@ -191,6 +191,24 @@ NORETURN void mp_machine_bootloader(size_t n_args, const mp_obj_t *args) {
     }
 }
 
+#if MICROPY_PY_MACHINE_DFU_BOOTLOADER
+STATIC mp_obj_t machine_enter_ota_dfu(void) {
+    const int DFU_MAGIC_OTA_RESET = 0xa8;
+    NRF_POWER->GPREGRET = DFU_MAGIC_OTA_RESET;
+    NVIC_SystemReset();
+    return mp_const_none;
+}
+MP_DEFINE_CONST_FUN_OBJ_0(machine_enter_ota_dfu_obj, machine_enter_ota_dfu);
+
+STATIC mp_obj_t machine_enter_serial_dfu(void) {
+    const int DFU_MAGIC_SERIAL_ONLY_RESET = 0x4e;
+    NRF_POWER->GPREGRET = DFU_MAGIC_SERIAL_ONLY_RESET;
+    NVIC_SystemReset();
+    return mp_const_none;
+}
+MP_DEFINE_CONST_FUN_OBJ_0(machine_enter_serial_dfu_obj, machine_enter_serial_dfu);
+#endif
+
 static void mp_machine_idle(void) {
     MICROPY_EVENT_POLL_HOOK;
 }
