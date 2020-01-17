@@ -14,7 +14,7 @@
 #elif (BLUETOOTH_SD == 132)
 
 #define MICROPY_PY_BLE                  (1)
-#define MICROPY_PY_BLE_NUS              (0)
+#define MICROPY_PY_BLE_NUS              (1)
 #define BLUETOOTH_WEBBLUETOOTH_REPL     (0)
 #define MICROPY_PY_UBLUEPY              (1)
 #define MICROPY_PY_UBLUEPY_PERIPHERAL   (1)
