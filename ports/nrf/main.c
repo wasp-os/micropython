@@ -56,6 +56,7 @@
 #include "pwm.h"
 #endif
 #include "timer.h"
+#include "wdt.h"
 
 #if BLUETOOTH_SD
 #include "nrf_sdm.h"
@@ -99,8 +100,11 @@ extern uint32_t _heap_end;
 
 int main(int argc, char **argv) {
 
-
 soft_reset:
+
+#if MICROPY_PY_MACHINE_WDT
+    wdt_init();
+#endif
 
     led_init();
 
