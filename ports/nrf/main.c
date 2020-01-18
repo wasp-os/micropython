@@ -59,6 +59,7 @@
 #include "pwm.h"
 #endif
 #include "timer.h"
+#include "wdt.h"
 
 #if BLUETOOTH_SD
 #include "nrf_sdm.h"
@@ -115,6 +116,10 @@ void NORETURN _start(void) {
     MICROPY_BOARD_EARLY_INIT();
 
 soft_reset:
+
+    #if MICROPY_PY_MACHINE_WDT
+    wdt_init();
+    #endif
 
     #if MICROPY_PY_TIME_TICKS
     rtc1_init_time_ticks();

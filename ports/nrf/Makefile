@@ -229,6 +229,7 @@ SRC_C += \
 	drivers/rng.c \
 	drivers/softpwm.c \
 	drivers/ticker.c \
+	drivers/wdt.c \
 	drivers/bluetooth/ble_drv.c \
 	drivers/bluetooth/ble_uart.c \
 	$(wildcard $(BOARD_DIR)/*.c) \
