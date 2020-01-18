@@ -212,7 +212,11 @@ void ble_uart_init0(void) {
 
     ble_uart_peripheral.conn_handle = 0xFFFF;
 
+#ifdef MICROPY_HW_NUS_NAME
+    char device_name[] = MICROPY_HW_NUS_NAME;
+#else
     char device_name[] = "mpus";
+#endif
 
     mp_obj_t service_list = mp_obj_new_list(0, NULL);
     mp_obj_list_append(service_list, MP_OBJ_FROM_PTR(&ble_uart_service));
