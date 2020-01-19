@@ -39,10 +39,18 @@
 #define MICROPY_PY_MACHINE_TEMP     (1)
 #define MICROPY_PY_RANDOM_HW_RNG    (1)
 #define MICROPY_PY_MACHINE_DFU_BOOTLOADER (1)
+#define MICROPY_PY_MACHINE_WDT      (1)
 
 #define MICROPY_HW_HAS_LED          (0)
 #define MICROPY_HW_LED_COUNT        (0)
 #define MICROPY_HW_LED_PULLUP       (0)
+
+// WDT config
+#define MICROPY_HW_HAS_WDT_BUTTON   (1)
+#define MICROPY_HW_WDT_BUTTON       (13)
+#define MICROPY_HW_WDT_BUTTON_ACTIVE (1) // active high
+#define MICROPY_HW_WDT_BUTTON_PULL  (0)  // no pull up/down
+#define MICROPY_HW_WDT_BUTTON_ENABLE (15) // no enable pin
 
 // UART config
 #define MICROPY_HW_UART1_RX         (17) /* not connected */
