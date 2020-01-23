@@ -32,6 +32,7 @@
 #if MICROPY_PY_MACHINE_SPI || MICROPY_PY_MACHINE_SOFTSPI
 
 #include "extmod/modmachine.h"
+#include "wdt.h"
 
 // if a port didn't define MSB/LSB constants then provide them
 #ifndef MICROPY_PY_MACHINE_SPI_MSB
@@ -87,6 +88,7 @@ MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mp_machine_spi_readinto_obj, 2, 3, mp_machin
 static mp_obj_t mp_machine_spi_write(mp_obj_t self, mp_obj_t wr_buf) {
     mp_buffer_info_t src;
     mp_get_buffer_raise(wr_buf, &src, MP_BUFFER_READ);
+    wdt_feed();
     mp_machine_spi_transfer(self, src.len, (const uint8_t *)src.buf, NULL);
     return mp_const_none;
 }
