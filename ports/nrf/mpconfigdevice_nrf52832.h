@@ -47,3 +47,14 @@
 #ifndef MICROPY_PY_UBINASCII
 #define MICROPY_PY_UBINASCII               (1)
 #endif
+
+// Additional features needed by wasp-os
+
+#define MICROPY_ENABLE_SCHEDULER           (1)
+#define MICROPY_EMIT_THUMB                 (1)
+#define MICROPY_SCHEDULER_DEPTH            (4)
+#define MICROPY_PERSISTENT_CODE_LOAD       (1)
+#define MICROPY_PY_BUILTINS_INPUT          (1)
+#define MICROPY_PY_IO                      (1)
+#define MICROPY_PY_IO_FILEIO               (1)
+#define MICROPY_PY_UJSON                   (1)
