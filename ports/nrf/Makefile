@@ -132,6 +132,9 @@ CFLAGS += -Os -DNDEBUG
 LDFLAGS += -Os
 endif
 
+# Options for mpy-cross
+MPY_CROSS_FLAGS += -march=armv7m
+
 LIBS = \
 
 ifeq ($(MCU_VARIANT), nrf52)
