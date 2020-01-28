@@ -46,8 +46,12 @@
 #define MICROPY_VFS                 (0)
 #endif
 #define MICROPY_ALLOC_PATH_MAX      (512)
+#ifndef MICROPY_PERSISTENT_CODE_LOAD
 #define MICROPY_PERSISTENT_CODE_LOAD (0)
+#endif
+#ifndef MICROPY_EMIT_THUMB
 #define MICROPY_EMIT_THUMB          (0)
+#endif
 #define MICROPY_EMIT_INLINE_THUMB   (0)
 #define MICROPY_COMP_MODULE_CONST   (0)
 #define MICROPY_COMP_TRIPLE_TUPLE_ASSIGN (0)
@@ -82,9 +86,16 @@
 #define MICROPY_FATFS_RPATH            (2)
 #define MICROPY_FATFS_MULTI_PARTITION  (1)
 
-// TODO these should be generic, not bound to fatfs
-#define mp_type_fileio fatfs_type_fileio
-#define mp_type_textio fatfs_type_textio
+#if MICROPY_VFS_FAT
+#define mp_type_fileio mp_type_vfs_fat_fileio
+#define mp_type_textio mp_type_vfs_fat_textio
+#elif MICROPY_VFS_LFS1
+#define mp_type_fileio mp_type_vfs_lfs1_fileio
+#define mp_type_textio mp_type_vfs_lfs1_textio
+#elif MICROPY_VFS_LFS2
+#define mp_type_fileio mp_type_vfs_lfs2_fileio
+#define mp_type_textio mp_type_vfs_lfs2_textio
+#endif
 
 // use vfs's functions for import stat and builtin open
 #if MICROPY_VFS
@@ -124,14 +135,20 @@
 #define MICROPY_PY_COLLECTIONS_ORDEREDDICT (0)
 #define MICROPY_PY_MATH_SPECIAL_FUNCTIONS (0)
 #define MICROPY_PY_CMATH            (0)
+#ifndef MICROPY_PY_IO
 #define MICROPY_PY_IO               (0)
+#endif
+#ifndef MICROPY_PY_IO_FILEIO
 #define MICROPY_PY_IO_FILEIO        (0)
+#endif
 #define MICROPY_PY_UERRNO           (0)
 #define MICROPY_PY_URANDOM          (1)
 #define MICROPY_PY_URANDOM_EXTRA_FUNCS (1)
 #define MICROPY_PY_UCTYPES          (0)
 #define MICROPY_PY_UZLIB            (0)
+#ifndef MICROPY_PY_UJSON
 #define MICROPY_PY_UJSON            (0)
+#endif
 #define MICROPY_PY_URE              (0)
 #define MICROPY_PY_UHEAPQ           (0)
 #define MICROPY_PY_UHASHLIB         (0)
