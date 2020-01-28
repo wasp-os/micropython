@@ -41,6 +41,8 @@
 #define MICROPY_PY_MACHINE_DFU_BOOTLOADER (1)
 #define MICROPY_PY_MACHINE_WDT      (1)
 
+#define MICROPY_EMIT_THUMB          (1)
+
 #define MICROPY_HW_HAS_LED          (0)
 
 // WDT config
