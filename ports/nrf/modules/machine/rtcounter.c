@@ -55,8 +55,17 @@ typedef struct _machine_rtc_obj_t {
     machine_rtc_config_t * config;  // pointer to volatile part
 } machine_rtc_obj_t;
 
+#if !defined(BLUETOOTH_SD)
+#define machine_rtc_lookup(x) x
+#else
+// RTC0 is reserved for use by the softdevice
+#define machine_rtc_lookup(x) (x-1)
+#endif
+
 STATIC const nrfx_rtc_t machine_rtc_instances[] = {
+#if !defined(BLUETOOTH_SD)
     NRFX_RTC_INSTANCE(0),
+#endif
     NRFX_RTC_INSTANCE(1),
 #if defined(NRF52_SERIES)
     NRFX_RTC_INSTANCE(2),
@@ -65,22 +74,28 @@ STATIC const nrfx_rtc_t machine_rtc_instances[] = {
 
 STATIC machine_rtc_config_t configs[MP_ARRAY_SIZE(machine_rtc_instances)];
 
+#if !defined(BLUETOOTH_SD)
 STATIC void interrupt_handler0(nrfx_rtc_int_type_t int_type);
+#endif
 STATIC void interrupt_handler1(nrfx_rtc_int_type_t int_type);
 #if defined(NRF52_SERIES)
 STATIC void interrupt_handler2(nrfx_rtc_int_type_t int_type);
 #endif
 
 STATIC const machine_rtc_obj_t machine_rtc_obj[] = {
+#if !defined(BLUETOOTH_SD)
     {{&machine_rtcounter_type}, .p_rtc = &machine_rtc_instances[0], .handler=interrupt_handler0, .config=&configs[0]},
+#endif
     {{&machine_rtcounter_type}, .p_rtc = &machine_rtc_instances[1], .handler=interrupt_handler1, .config=&configs[1]},
 #if defined(NRF52_SERIES)
     {{&machine_rtcounter_type}, .p_rtc = &machine_rtc_instances[2], .handler=interrupt_handler2, .config=&configs[2]},
 #endif
 };
 
+
 STATIC void interrupt_handler(size_t instance_id) {
-    const machine_rtc_obj_t * self = &machine_rtc_obj[instance_id];
+    int rtc_id = machine_rtc_lookup(instance_id);
+    const machine_rtc_obj_t * self = &machine_rtc_obj[rtc_id];
     machine_rtc_config_t *config = self->config;
     if (config->callback != NULL) {
         mp_call_function_1((mp_obj_t)config->callback, (mp_obj_t)self);
@@ -93,9 +108,11 @@ STATIC void interrupt_handler(size_t instance_id) {
     }
 }
 
+#if !defined(BLUETOOTH_SD)
 STATIC void interrupt_handler0(nrfx_rtc_int_type_t int_type) {
     interrupt_handler(0);
 }
+#endif
 
 STATIC void interrupt_handler1(nrfx_rtc_int_type_t int_type) {
     interrupt_handler(1);
@@ -112,7 +129,7 @@ void rtc_init0(void) {
 
 STATIC int rtc_find(mp_obj_t id) {
     // given an integer id
-    int rtc_id = mp_obj_get_int(id);
+    int rtc_id = machine_rtc_lookup(mp_obj_get_int(id));
     if (rtc_id >= 0 && rtc_id < MP_ARRAY_SIZE(machine_rtc_obj)) {
         return rtc_id;
     }
