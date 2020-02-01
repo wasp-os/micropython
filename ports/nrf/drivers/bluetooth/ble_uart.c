@@ -99,15 +99,14 @@ static ubluepy_advertise_data_t m_adv_data_eddystone_url;
 #endif // BLUETOOTH_WEBBLUETOOTH_REPL
 
 int mp_hal_stdin_rx_chr(void) {
-    wdt_feed();
+    wdt_feed(false);
 
     while (!ble_uart_enabled()) {
         // wait for connection
-	wdt_feed();
+	wdt_feed(false);
     }
     while (isBufferEmpty(mp_rx_ring_buffer)) {
-	wdt_feed();
-        ;
+	wdt_feed(false);
     }
 
     uint8_t byte;
