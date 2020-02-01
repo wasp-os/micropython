@@ -26,6 +26,6 @@
 #define __MICROPY_INCLUDED_LIB_WDT_H__
 
 void wdt_init(void);
-void wdt_feed(void);
+void wdt_feed(bool isr);
 
 #endif // __MICROPY_INCLUDED_LIB_WDT_H__
