@@ -39,7 +39,6 @@
 #include "pin.h"
 #include "genhdr/pins.h"
 #include "spi.h"
-#include "wdt.h"
 #if NRFX_SPI_ENABLED
 #include "nrfx_spi.h"
 #else
@@ -405,7 +404,6 @@ MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mp_machine_spi_readinto_obj, 2, 3, mp_machin
 STATIC mp_obj_t mp_machine_spi_write(mp_obj_t self, mp_obj_t wr_buf) {
     mp_buffer_info_t src;
     mp_get_buffer_raise(wr_buf, &src, MP_BUFFER_READ);
-    wdt_feed();
     spi_transfer(self, src.len, (const uint8_t*)src.buf, NULL);
     return mp_const_none;
 }
