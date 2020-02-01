@@ -28,6 +28,7 @@
 #include "py/nlr.h"
 #include "py/runtime.h"
 #include "rtcounter.h"
+#include "wdt.h"
 #include "nrfx_rtc.h"
 #include "nrf_clock.h"
 
@@ -106,6 +107,7 @@ STATIC void interrupt_handler(size_t instance_id) {
         uint32_t val = nrfx_rtc_counter_get(self->p_rtc) + config->period;
         nrfx_rtc_cc_set(self->p_rtc, 0, val, true);
     }
+    wdt_feed(true);
 }
 
 #if !defined(BLUETOOTH_SD)
