@@ -76,7 +76,7 @@ void wdt_init(void)
     }
 }
 
-void wdt_feed(void)
+void wdt_feed(bool isr)
 {
     /*
      * A WDT button allows us to feed the dog from somewhere that would
@@ -86,6 +86,8 @@ void wdt_feed(void)
      */
 #if MICROPY_HW_HAS_WDT_BUTTON
     if (!button_pressed())
+#else
+    if (!isr)
 #endif
         nrf_wdt_reload_request_set(0);
 }
