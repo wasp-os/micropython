@@ -36,6 +36,7 @@
 #include "modules/uos/microbitfs.h"
 #include "extmod/vfs.h"
 #include "extmod/vfs_fat.h"
+#include "extmod/vfs_lfs.h"
 #include "genhdr/mpversion.h"
 //#include "timeutils.h"
 #include "uart.h"
@@ -83,7 +84,7 @@ STATIC mp_obj_t os_uname(void) {
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_0(os_uname_obj, os_uname);
 
-#if MICROPY_VFS
+#if MICROPY_VFS_VFAT
 /// \function sync()
 /// Sync all filesystems.
 STATIC mp_obj_t os_sync(void) {
@@ -153,7 +154,6 @@ STATIC const mp_rom_map_elem_t os_module_globals_table[] = {
     { MP_ROM_QSTR(MP_QSTR_statvfs), MP_ROM_PTR(&mp_vfs_statvfs_obj) },
     { MP_ROM_QSTR(MP_QSTR_unlink), MP_ROM_PTR(&mp_vfs_remove_obj) }, // unlink aliases to remove
 
-    { MP_ROM_QSTR(MP_QSTR_sync), MP_ROM_PTR(&mod_os_sync_obj) },
 
 #elif MICROPY_MBFS
     { MP_ROM_QSTR(MP_QSTR_listdir), MP_ROM_PTR(&uos_mbfs_listdir_obj) },
@@ -176,7 +176,16 @@ STATIC const mp_rom_map_elem_t os_module_globals_table[] = {
 #if MICROPY_VFS
     { MP_ROM_QSTR(MP_QSTR_mount), MP_ROM_PTR(&mp_vfs_mount_obj) },
     { MP_ROM_QSTR(MP_QSTR_umount), MP_ROM_PTR(&mp_vfs_umount_obj) },
+#if MICROPY_VFS_FAT
     { MP_ROM_QSTR(MP_QSTR_VfsFat), MP_ROM_PTR(&mp_fat_vfs_type) },
+    { MP_ROM_QSTR(MP_QSTR_sync), MP_ROM_PTR(&mod_os_sync_obj) },
+#endif
+#if MICROPY_VFS_LFS1
+    { MP_ROM_QSTR(MP_QSTR_VfsLfs1), MP_ROM_PTR(&mp_type_vfs_lfs1) },
+#endif
+#if MICROPY_VFS_LFS2
+    { MP_ROM_QSTR(MP_QSTR_VfsLfs2), MP_ROM_PTR(&mp_type_vfs_lfs2) },
+#endif
 #endif
 };
 
