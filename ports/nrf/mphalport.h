@@ -46,6 +46,12 @@ extern const unsigned char mp_hal_status_to_errno_table[4];
 NORETURN void mp_hal_raise(HAL_StatusTypeDef status);
 void mp_hal_set_interrupt_char(int c); // -1 to disable
 
+/* This is a nasty hack to get MICROPY_VFS_LFS2 to work on a device
+ * without an real RTC (all nRF devices have a fixed rate "RTC" but
+ * it doesn't know the actual time of day).
+ */
+#define mp_hal_time_ns() (0)
+
 int mp_hal_stdin_rx_chr(void);
 void mp_hal_stdout_tx_str(const char *str);
 
