@@ -28,6 +28,79 @@
 #include "py/runtime.h"
 #include "modmimxrt.h"
 
+//#include "py/nlr.h"
+//#include "py/smallint.h"
+//#include "py/obj.h"
+#include "lib/timeutils/timeutils.h"
+//#include "extmod/utime_mphal.h"
+
+/// \module time - time related functions
+///
+/// The `time` module provides functions for getting the current time and date,
+/// and for sleeping.
+
+/// \function localtime(secs)
+/// Convert a time expressed in seconds since Jan 1, 2000 into an 8-tuple which
+/// contains: (year, month, mday, hour, minute, second, weekday, yearday)
+/// year includes the century (for example 2014)
+/// month   is 1-12
+/// mday    is 1-31
+/// hour    is 0-23
+/// minute  is 0-59
+/// second  is 0-59
+/// weekday is 0-6 for Mon-Sun.
+/// yearday is 1-366
+static mp_obj_t mp_utime_localtime(mp_obj_t secs) {
+    mp_int_t seconds = mp_obj_get_int(secs);
+    timeutils_struct_time_t tm;
+    timeutils_seconds_since_2000_to_struct_time(seconds, &tm);
+    mp_obj_t tuple[8] = {
+        tuple[0] = mp_obj_new_int(tm.tm_year),
+        tuple[1] = mp_obj_new_int(tm.tm_mon),
+        tuple[2] = mp_obj_new_int(tm.tm_mday),
+        tuple[3] = mp_obj_new_int(tm.tm_hour),
+        tuple[4] = mp_obj_new_int(tm.tm_min),
+        tuple[5] = mp_obj_new_int(tm.tm_sec),
+        tuple[6] = mp_obj_new_int(tm.tm_wday),
+        tuple[7] = mp_obj_new_int(tm.tm_yday),
+    };
+    return mp_obj_new_tuple(8, tuple);
+}
+MP_DEFINE_CONST_FUN_OBJ_1(mp_utime_localtime_obj, mp_utime_localtime);
+
+/// \function mktime()
+/// This is inverse function of localtime. It's argument is a full 8-tuple
+/// which expresses a time as per localtime. It returns an integer which is
+/// the number of seconds since Jan 1, 2000.
+static mp_obj_t mp_utime_mktime(mp_obj_t tuple) {
+
+    size_t len;
+    mp_obj_t *elem;
+
+    mp_obj_get_array(tuple, &len, &elem);
+
+    // localtime generates a tuple of len 8. CPython uses 9, so we accept both.
+    if (len < 8 || len > 9) {
+        nlr_raise(mp_obj_new_exception_msg_varg(&mp_type_TypeError, "mktime needs a tuple of length 8 or 9 (%d given)", len));
+    }
+
+    return mp_obj_new_int_from_uint(timeutils_mktime(mp_obj_get_int(elem[0]),
+            mp_obj_get_int(elem[1]), mp_obj_get_int(elem[2]), mp_obj_get_int(elem[3]),
+            mp_obj_get_int(elem[4]), mp_obj_get_int(elem[5])));
+}
+MP_DEFINE_CONST_FUN_OBJ_1(mp_utime_mktime_obj, mp_utime_mktime);
+
+static const mp_rom_map_elem_t time_module_globals_table[] = {
+    { MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_utime) },
+
+    { MP_ROM_QSTR(MP_QSTR_localtime), MP_ROM_PTR(&mp_utime_localtime_obj) },
+    { MP_ROM_QSTR(MP_QSTR_mktime), MP_ROM_PTR(&mp_utime_mktime_obj) },
+
+    { MP_ROM_QSTR(MP_QSTR_sleep), MP_ROM_PTR(&mp_utime_sleep_obj) },
+    { MP_ROM_QSTR(MP_QSTR_sleep_ms), MP_ROM_PTR(&mp_utime_sleep_ms_obj) },
+    { MP_ROM_QSTR(MP_QSTR_sleep_us), MP_ROM_PTR(&mp_utime_sleep_us_obj) },
+};
+
 static const mp_rom_map_elem_t mimxrt_module_globals_table[] = {
     { MP_ROM_QSTR(MP_QSTR___name__),            MP_ROM_QSTR(MP_QSTR_mimxrt) },
     { MP_ROM_QSTR(MP_QSTR_Flash),               MP_ROM_PTR(&mimxrt_flash_type) },
