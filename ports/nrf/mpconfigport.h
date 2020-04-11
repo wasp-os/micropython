@@ -81,7 +81,7 @@
 #endif
 
 #ifndef MICROPY_PY_SYS_STDFILES
-#define MICROPY_PY_SYS_STDFILES            (CORE_FEAT)
+#define MICROPY_PY_SYS_STDFILES            (1)
 #endif
 
 #ifndef MICROPY_PY_BINASCII
@@ -362,3 +362,5 @@ long unsigned int rng_generate_random_word(void);
 #ifndef MICROPY_BOARD_EARLY_INIT
 #define MICROPY_BOARD_EARLY_INIT()
 #endif
+
+#define MICROPY_PY_IO               (1)
