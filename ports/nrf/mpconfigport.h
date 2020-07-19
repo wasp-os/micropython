@@ -366,3 +366,4 @@ long unsigned int rng_generate_random_word(void);
 #endif
 
 #define MICROPY_PY_IO               (1)
+#define MICROPY_PY_JSON             (1)
