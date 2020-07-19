@@ -42,7 +42,7 @@
 
 #define READLINE_HIST_SIZE (MP_ARRAY_SIZE(MP_STATE_PORT(readline_hist)))
 
-enum { ESEQ_NONE, ESEQ_ESC, ESEQ_ESC_BRACKET, ESEQ_ESC_BRACKET_DIGIT, ESEQ_ESC_O };
+enum { ESEQ_NONE, ESEQ_ESC, ESEQ_ESC_BRACKET, ESEQ_ESC_BRACKET_DIGIT, ESEQ_ESC_O, ESEQ_CR };
 
 void readline_init0(void) {
     memset(MP_STATE_PORT(readline_hist), 0, READLINE_HIST_SIZE * sizeof(const char*));
@@ -133,6 +133,8 @@ int readline_process_char(int c) {
     int redraw_step_back = 0;
     bool redraw_from_cursor = false;
     int redraw_step_forward = 0;
+    if (rl.escape_seq == ESEQ_CR && c != '\n')
+	rl.escape_seq = ESEQ_NONE;
     if (rl.escape_seq == ESEQ_NONE) {
         if (CHAR_CTRL_A <= c && c <= CHAR_CTRL_E && vstr_len(rl.line) == rl.orig_line_len) {
             // control character with empty line
@@ -182,7 +184,12 @@ int readline_process_char(int c) {
         } else if (c == CHAR_CTRL_W) {
             goto backward_kill_word;
         #endif
-        } else if (c == '\r') {
+        } else if (c == '\r' || c == '\n') {
+	    // Treat carriage return as a special escape sequence so that we
+	    // can skip a subsequent linefeed (if there is one)
+	    if (c == '\r')
+		rl.escape_seq = ESEQ_CR;
+
             // newline
             mp_hal_stdout_tx_str("\r\n");
             readline_push_history(vstr_null_terminated_str(rl.line) + rl.orig_line_len);
