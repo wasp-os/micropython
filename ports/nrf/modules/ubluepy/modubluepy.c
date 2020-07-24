@@ -37,6 +37,24 @@ extern const mp_obj_type_t ubluepy_constants_type;
 extern const mp_obj_type_t ubluepy_scanner_type;
 extern const mp_obj_type_t ubluepy_scan_entry_type;
 
+#if MICROPY_PY_BLE_NUS
+#include "drivers/bluetooth/ble_uart.h"
+
+static mp_obj_t ubluepy_uart_connected(void)
+{
+	return mp_obj_new_bool(ble_uart_connected());
+}
+static MP_DEFINE_CONST_FUN_OBJ_0(ubluepy_uart_connected_obj,
+		                 ubluepy_uart_connected);
+
+static mp_obj_t ubluepy_uart_enabled(void)
+{
+	return mp_obj_new_bool(ble_uart_enabled());
+}
+static MP_DEFINE_CONST_FUN_OBJ_0(ubluepy_uart_enabled_obj,
+		                 ubluepy_uart_enabled);
+#endif
+
 static const mp_rom_map_elem_t mp_module_ubluepy_globals_table[] = {
     { MP_ROM_QSTR(MP_QSTR___name__),        MP_ROM_QSTR(MP_QSTR_ubluepy) },
 #if MICROPY_PY_UBLUEPY_PERIPHERAL
@@ -56,6 +74,10 @@ static const mp_rom_map_elem_t mp_module_ubluepy_globals_table[] = {
     { MP_ROM_QSTR(MP_QSTR_constants),       MP_ROM_PTR(&ubluepy_constants_type) },
 #if MICROPY_PY_UBLUEPY_DESCRIPTOR
     { MP_ROM_QSTR(MP_QSTR_Descriptor),      MP_ROM_PTR(&ubluepy_descriptor_type) },
+#endif
+#if MICROPY_PY_BLE_NUS
+    { MP_ROM_QSTR(MP_QSTR_uart_connected),  MP_ROM_PTR(&ubluepy_uart_connected_obj) },
+    { MP_ROM_QSTR(MP_QSTR_uart_enabled),    MP_ROM_PTR(&ubluepy_uart_enabled_obj) },
 #endif
 };
 
