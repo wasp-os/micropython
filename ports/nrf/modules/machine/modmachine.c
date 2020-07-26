@@ -54,6 +54,9 @@
 #if MICROPY_PY_MACHINE_RTCOUNTER
 #include "rtcounter.h"
 #endif
+#if MICROPY_PY_MACHINE_WDT
+#include "wdt.h"
+#endif
 
 #define PYB_RESET_HARD      (0)
 #define PYB_RESET_WDT       (1)
@@ -163,6 +166,14 @@ STATIC mp_obj_t machine_enter_serial_dfu(void) {
 MP_DEFINE_CONST_FUN_OBJ_0(machine_enter_serial_dfu_obj, machine_enter_serial_dfu);
 #endif
 
+#if MICROPY_PY_MACHINE_WDT
+STATIC mp_obj_t machine_starve_wdt(void) {
+    wdt_starve = true;
+    return mp_const_none;
+}
+MP_DEFINE_CONST_FUN_OBJ_0(machine_starve_wdt_obj, machine_starve_wdt);
+#endif
+
 STATIC mp_obj_t machine_soft_reset(void) {
     pyexec_system_exit = PYEXEC_FORCED_EXIT;
     mp_raise_type(&mp_type_SystemExit);
@@ -214,6 +225,9 @@ STATIC const mp_rom_map_elem_t machine_module_globals_table[] = {
 #if MICROPY_PY_MACHINE_DFU_BOOTLOADER
     { MP_ROM_QSTR(MP_QSTR_enter_ota_dfu),      MP_ROM_PTR(&machine_enter_ota_dfu_obj) },
     { MP_ROM_QSTR(MP_QSTR_enter_serial_dfu),   MP_ROM_PTR(&machine_enter_serial_dfu_obj) },
+#endif
+#if MICROPY_PY_MACHINE_WDT
+    { MP_ROM_QSTR(MP_QSTR_starve_wdt),         MP_ROM_PTR(&machine_starve_wdt_obj) },
 #endif
     { MP_ROM_QSTR(MP_QSTR_soft_reset),         MP_ROM_PTR(&machine_soft_reset_obj) },
     { MP_ROM_QSTR(MP_QSTR_enable_irq),         MP_ROM_PTR(&machine_enable_irq_obj) },

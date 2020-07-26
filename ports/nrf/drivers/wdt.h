@@ -25,7 +25,12 @@
 #ifndef __MICROPY_INCLUDED_LIB_WDT_H__
 #define __MICROPY_INCLUDED_LIB_WDT_H__
 
+#include <stdbool.h>
+
+extern bool wdt_starve;
+
 void wdt_init(void);
 void wdt_feed(bool isr);
+
 
 #endif // __MICROPY_INCLUDED_LIB_WDT_H__
