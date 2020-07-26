@@ -169,6 +169,9 @@ static const mp_rom_map_elem_t machine_module_globals_table[] = {
     { MP_ROM_QSTR(MP_QSTR_enter_ota_dfu),      MP_ROM_PTR(&machine_enter_ota_dfu_obj) },
     { MP_ROM_QSTR(MP_QSTR_enter_serial_dfu),   MP_ROM_PTR(&machine_enter_serial_dfu_obj) },
     #endif
+    #if MICROPY_PY_MACHINE_WDT
+    { MP_ROM_QSTR(MP_QSTR_starve_wdt),         MP_ROM_PTR(&machine_starve_wdt_obj) },
+    #endif
 
     // Power related functions.
     { MP_ROM_QSTR(MP_QSTR_idle), MP_ROM_PTR(&machine_idle_obj) },

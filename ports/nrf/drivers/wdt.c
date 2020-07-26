@@ -28,7 +28,10 @@
 
 #if MICROPY_PY_MACHINE_WDT
 
+#include "wdt.h"
 #include "nrf_wdt.h"
+
+bool wdt_starve;
 
 #if MICROPY_HW_HAS_WDT_BUTTON
 static void button_init(void)
@@ -85,11 +88,17 @@ void wdt_feed(bool isr)
      * implementing a (reasonably robust) long-press reset button.
      */
 #if MICROPY_HW_HAS_WDT_BUTTON
-    if (!button_pressed())
+    if (button_pressed())
+        return;
 #else
-    if (!isr)
+    if (isr)
+	return;
 #endif
-        nrf_wdt_reload_request_set(0);
+
+    if (wdt_starve)
+	return;
+
+    nrf_wdt_reload_request_set(0);
 }
 
 #endif // MICROPY_PY_MACHINE_WDT

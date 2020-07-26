@@ -49,6 +49,9 @@
 #if MICROPY_PY_MACHINE_RTCOUNTER
 #include "rtcounter.h"
 #endif
+#if MICROPY_PY_MACHINE_WDT
+#include "wdt.h"
+#endif
 
 #define PYB_RESET_HARD      (0)
 #define PYB_RESET_WDT       (1)
