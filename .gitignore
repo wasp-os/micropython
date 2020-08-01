@@ -15,6 +15,7 @@
 # Logs and Databases
 ######################
 *.log
+cscope.out
 
 # VIM Swap Files
 ######################
