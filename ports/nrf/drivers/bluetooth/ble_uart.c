@@ -121,6 +121,8 @@ int mp_hal_stdin_rx_chr(void) {
 }
 
 mp_uint_t mp_hal_stdout_tx_strn(const char *str, size_t len) {
+    wdt_feed(false);
+
     // Not connected: drop output
     if (!ble_uart_enabled()) return 0;
 
