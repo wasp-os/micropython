@@ -38,6 +38,7 @@
 #include "ble.h" // sd_ble_uuid_encode
 #include "drivers/flash.h"
 #include "mphalport.h"
+#include "wdt.h"
 
 
 #if MICROPY_HW_USB_CDC
@@ -701,7 +702,7 @@ void ble_drv_attr_s_notify(uint16_t conn_handle, uint16_t handle, uint16_t len, 
     hvx_params.p_data = p_data;
 
     while (m_tx_in_progress > MAX_TX_IN_PROGRESS) {
-        ;
+        wdt_feed(false);
     }
 
     BLE_DRIVER_LOG("Request TX, m_tx_in_progress: %u\n", m_tx_in_progress);
