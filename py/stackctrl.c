@@ -27,6 +27,7 @@
 #include "py/runtime.h"
 #include "py/stackctrl.h"
 
+#pragma GCC diagnostic ignored "-Wdangling-pointer=1"
 void mp_stack_ctrl_init(void) {
     volatile int stack_dummy;
     MP_STATE_THREAD(stack_top) = (char *)&stack_dummy;
