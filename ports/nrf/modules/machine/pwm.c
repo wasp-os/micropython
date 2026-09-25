@@ -254,9 +254,16 @@ void pwm_deinit_all(void) {
     pwm_init0();
 }
 
-// Stop the PWM module, but do not release it.
+// Stop the PWM module and release it back to the pool, so a later PWM(pin)
+// construction (with no explicit device/channel) can find and reuse this
+// slot. Previously this left the slot marked STOPPED rather than FREE, so
+// hard_pwm_find() could never return it again: every PWM() construction
+// permanently consumed one of a small, fixed number of slots (12 on
+// nRF52832) for the life of the process, and the (n+1)th construction
+// always failed with "all PWM devices in use", however long ago the first n
+// objects had been deinit'd.
 static void mp_machine_pwm_deinit(machine_pwm_obj_t *self) {
-    self->p_config->active = STOPPED;
+    self->p_config->active = FREE;
     nrfx_pwm_stop(self->p_pwm, true);
     nrfx_pwm_uninit(self->p_pwm);
 }
