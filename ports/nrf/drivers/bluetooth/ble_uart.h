@@ -36,6 +36,8 @@ void ble_uart_init0(void);
 void ble_uart_advertise(void);
 bool ble_uart_connected(void);
 bool ble_uart_enabled(void);
+void ble_uart_advertising_set(bool advertise);
+bool ble_uart_advertising(void);
 
 uintptr_t mp_ble_uart_stdio_poll(uintptr_t poll_flags);
 int mp_ble_uart_stdin_rx_chr(void);

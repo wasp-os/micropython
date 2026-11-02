@@ -39,6 +39,9 @@
 
 #if MICROPY_PY_BLE_NUS
 
+#include "ble_gap.h"
+#include "ble_hci.h"
+
 static ubluepy_uuid_obj_t uuid_obj_service = {
     .base.type = &ubluepy_uuid_type,
     .type = UBLUEPY_UUID_128_BIT,
@@ -84,6 +87,8 @@ static ubluepy_peripheral_obj_t ble_uart_peripheral = {
 
 static volatile bool m_cccd_enabled;
 static volatile bool m_connected;
+// Whether to advertise, so that hosts can find the console and connect
+static volatile bool m_advertise = true;
 
 ringBuffer_typedef(uint8_t, ringbuffer_t);
 
@@ -170,7 +175,9 @@ static void gap_event_handler(mp_obj_t self_in, uint16_t event_id, uint16_t conn
         self->conn_handle = 0xFFFF;      // invalid connection handle
         m_connected = false;
         m_cccd_enabled = false;
-        ble_uart_advertise();
+        if (m_advertise) {
+            ble_uart_advertise();
+        }
     }
 }
 
@@ -287,6 +294,34 @@ void ble_uart_advertise(void) {
 #else
     (void)ble_drv_advertise_data(&m_adv_data_uart_service);
 #endif // BLUETOOTH_WEBBLUETOOTH_REPL
+}
+
+// Stop advertising and hang up, so that nobody can find or use the
+// console; or advertise again.
+void ble_uart_advertising_set(bool advertise) {
+    if (advertise == m_advertise) {
+        return;
+    }
+    m_advertise = advertise;
+    if (advertise) {
+        if (!m_connected) {
+            ble_uart_advertise();
+        }
+    } else {
+        ble_drv_advertise_stop();
+        if (m_connected) {
+            // Drop console output from now on: until the disconnect event,
+            // notifications on the closing link fail, and the exception
+            // that raises from inside the console output is fatal.
+            m_cccd_enabled = false;
+            (void)sd_ble_gap_disconnect(ble_uart_peripheral.conn_handle,
+                BLE_HCI_REMOTE_USER_TERMINATED_CONNECTION);
+        }
+    }
+}
+
+bool ble_uart_advertising(void) {
+    return m_advertise;
 }
 
 bool ble_uart_connected(void) {
