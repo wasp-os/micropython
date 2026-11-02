@@ -332,7 +332,7 @@ void HardFault_Handler(void) {
     #endif
 }
 
-void MP_NORETURN __fatal_error(const char *msg) {
+MP_WEAK void MP_NORETURN __fatal_error(const char *msg) {
     while (1) {
         ;
     }
